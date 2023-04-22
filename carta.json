@@ -1,0 +1,56 @@
+{
+    "1": {
+        "name": "Patatas bravas",
+        "alergens": "",  
+        "vegan":"False",
+        "vegetarian":"True",
+        "category" : "comida",
+        "subCategory": "entrantes",
+        "description": "Patatas gajo crujientes crujientes con nuestra famosa salsa brava y ali-oli casero",
+        "ingredients": ["Patatas", "aceite de oliva", "Pimenton picante", "ajo", "sal"],
+        "price": "5.5",
+        "available": true 
+    },
+
+    "2": {
+        "_id": "",
+        "name": "Coca-Cola lata 33cl",
+        "alergens": "",
+        "vegan":"True",
+        "vegetarian":"True",  
+        "category" : "Bebidas",
+        "subCategory": "Sin alcohol",
+        "description": "",
+        "ingredients": "",
+        "price": "1.85", 
+        "available": true 
+    } ,
+    "3": {
+        "_id": "",
+        "name": "Copa de vino tinto",
+        "alergens": "",
+        "vegan":"True",
+        "vegetarian":"True",  
+        "category" : "Bebidas",
+        "subCategory": "Con alcohol",
+        "description": "",
+        "ingredients": "",
+        "price": "2.55",
+        "available": true  
+
+    },
+    "4": {
+        "_id": "",
+        "name": "Hamburguesa Vegana",
+        "alergens": "",
+        "vegan":"True",
+        "vegetarian":"True",  
+        "category" : "Comida",
+        "subCategory": "Sin alcohol",
+        "description": "",
+        "ingredients": "",
+        "price": "1.85", 
+        "available": true 
+
+    } 
+}
