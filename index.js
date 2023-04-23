@@ -40,11 +40,14 @@ app.get('/api/orders/served', (request, response) =>{
         response.json(order)
     })
 })
-app.get('/api/orders/:id', (request, response)=>{
+app.get('/api/orders/:id', (request, response, next)=>{
     const id = request.params
     Order.find({_id:id})
     .then(order=>{
         response.json(order)
+    })
+    .catch(error =>{
+        next(error)
     })
 })
 
@@ -57,17 +60,53 @@ app.get('/api/products', (request, response) =>{
     })
 })
 
+app.get('/api/products/categories', (resquest, response, next)=>{
+    menuItem.distinct('category')
+    .then(categorie =>{
+        response.json(categorie)
+    }).catch(error =>
+        next(error))
+})
 
-const item = new menuItem ({
-    name: "Hamburguesa Vegana",
-    alergens: ["Soja", 'leche', 'trigo'],
+app.get('/api/products/:category', (request, response) =>{
+    const {category} = request.params
+    menuItem.find({category: category})
+    .then(products =>{
+        response.json(products)
+    })
+})
+
+app.get('/api/products/:category/sub', (request, response, next) =>{
+    const {category} = request.params
+    console.log(request.params)
+    console.log(category)
+    menuItem.find({category: category}).distinct('subCategory')
+    .then(sub =>{
+        response.json(sub)
+    }).catch(error =>{
+        next(error)})
+})
+app.get('/api/products/find/:id', (request, response, next) =>{
+    const { id } = request.params
+    console.log(request.params)
+    menuItem.find({_id:id})
+    .then(prod =>{
+        response.json(prod)
+    }).catch(error => {
+        next(error)
+    })
+})
+/*
+const item = new menuItem({
+    name: "Prosecco",
+    alergens: [],
     vegan: true,
-    vegetarian:true,
-    category : 'comida',
-    subCategory: 'bocadillos',
-    description: "Hamburgesa 100% vegana casera", 
-    ingredients: ['Pan brioche', 'lechuga', 'tomate', 'cebolla'],
-    price: '7.5',
+    vegetarian: true,
+    category: "Bebida",
+    subCategory: "Vinos",
+    description: "Vino espumoso Prosecco, refrescante y afrutado, perfecto para celebraciones.",
+    ingredients: ["vino Prosecco"],
+    price: "12.99",
     available: true
 })
 
@@ -76,6 +115,8 @@ item.save().then(response =>
 ).catch(error=>{
     console.error(error)
 })
+*/
+
 /**************POST METHODS**************** */
 
 app.post('/api/orders/save', (resquest, response)=>{
@@ -91,6 +132,9 @@ app.post('/api/orders/save', (resquest, response)=>{
         .end()
     })
 })
+
+
+/************* MIDDLEWARES **************/
 
 app.use((error,request, response, next) => {
         console.log(error)
