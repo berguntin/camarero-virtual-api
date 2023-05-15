@@ -1,15 +1,21 @@
 require('./mongo')
 require('dotenv').config()
+const orderController = require('./controllers/orderController.js')
 
 const Order = require('./models/Order')
-const menuItem = require('./models/menuItem') 
-const mongoose = require('mongoose')
+const menuItem = require('./models/MenuItem') 
 const express = require('express')
-//const cors = require('cors')
+const cors = require('cors')
+
+
+
 
 const app = express()
 //app.use(cors())
 app.use(express.json())
+app.use(cors({
+    origin: '*'
+}))
 
 app.get('/', (request, response) =>{
     response.send("Hola, mundo")
@@ -89,61 +95,44 @@ app.get('/api/products/:category/sub', (request, response, next) =>{
 app.get('/api/products/find/:id', (request, response, next) =>{
     const { id } = request.params
     console.log(request.params)
-    menuItem.find({_id:id})
+    menuItem.findOne({_id:id})
     .then(prod =>{
         response.json(prod)
     }).catch(error => {
         next(error)
     })
 })
-/*
-const item = new menuItem({
-    name: "Prosecco",
-    alergens: [],
-    vegan: true,
-    vegetarian: true,
-    category: "Bebida",
-    subCategory: "Vinos",
-    description: "Vino espumoso Prosecco, refrescante y afrutado, perfecto para celebraciones.",
-    ingredients: ["vino Prosecco"],
-    price: "12.99",
-    available: true
-})
 
-item.save().then(response =>
-    console.log(response)
-).catch(error=>{
-    console.error(error)
-})
-*/
 
 /**************POST METHODS**************** */
 
-app.post('/api/orders/save', (resquest, response)=>{
-    const order = new Order(request.body)
-    order.save()
-    .then(order =>{
-        response.status(200)
-        .send(order)
-        .end()
-    }).catch( error =>{
-        response.status(304)
-        .send(error)
-        .end()
-    })
+app.post('/api/orders/save', async (request, response)=>{
+    console.log(request.body)
+    const order = new Order({...request.body, status: 'recieved'})
+    try {
+        const savedOrder = await order.save()
+        response.status(200).send(savedOrder)
+        console.log('guardada')
+    } catch (err) {
+        console.error('Error saving order:', err);
+        if (err.name === 'ValidationError') {
+            response.status(400).json({message: err.message});
+        } else {
+            response.status(500).json({message: 'An unexpected error occurred'});
+        }
+    }
 })
 
-
 /************* MIDDLEWARES **************/
-
-app.use((error,request, response, next) => {
-        console.log(error)
+//Gestion de 404
+app.use((request, response, next) => {
         response.status(404)
         .send('<h1>Error 404</h1>' + `La pagina ${request.originalUrl} no existe`)
         .end()    
 })
 
-const PORT = 3001
+const PORT = 3002
+
 app.listen(PORT, ()=>{
     console.log(`server is running on port: ${PORT}`)
 })

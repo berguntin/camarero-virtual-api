@@ -1,12 +1,35 @@
 const {model, Schema} = require('mongoose')
 
+
+const allergensList = [
+    "Lácteos",
+    "Huevos",
+    "Pescado",
+    "Mariscos",
+    "Frutos secos",
+    "Trigo",
+    "Soja",
+    "Apio",
+    "Mostaza",
+    "Sulfitos"
+  ];
+
 const itemScheme = new Schema({
     id:String,
     name: String,
-    alergens: Array,
+    allergens: {
+        type : [{type: String,
+             enum: allergensList,
+            default: []
+        }]
+    },
     vegan:Boolean,
     vegetarian:Boolean,
-    category : String,
+    category : {
+        type: String,
+        required: true,
+        enum : ['Bebidas', 'Entrantes', 'Platos principales', 'Postres', 'Cafés e infusiones']
+    },
     subCategory: String,
     description: String, 
     ingredients: [],

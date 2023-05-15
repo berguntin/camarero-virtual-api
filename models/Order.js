@@ -3,17 +3,31 @@ const {model, Schema} = require('mongoose')
 const orderScheme = new Schema({
     table: String,
     date: Date,
-    status: ["recieved", "onCourse", "served", "finished"],
-    items : [
-        {
-            productId: String,
-            quantity: Number,
-            price: Number
-        }
-    ],
-    totalPrice: Number
+    status: String,
+    items: {
+        type: [
+            {
+                productId: String,
+                quantity: Number,
+            }
+        ],
+        validate: [arrayLimit, 'El pedido debe contener al menos un artículo.']
+    },
+});
+
+function arrayLimit(val) {
+    return val.length > 0;
+}
+
+orderScheme.set('toJSON', {
+    transform: (document, returnedObject) => {
+        returnedObject.id = returnedObject._id
+        delete returnedObject._id
+        delete returnedObject.__v
+    }
 })
 
 const Order = model('Order', orderScheme)
 
 module.exports = Order 
+
