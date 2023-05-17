@@ -1,11 +1,13 @@
 require('./mongo')
 require('dotenv').config()
-const orderController = require('./controllers/orderController.js')
+
 
 const Order = require('./models/Order')
 const menuItem = require('./models/MenuItem') 
 const express = require('express')
 const cors = require('cors')
+const { calculateTotalPrice, updateOrderState } = require('./utils/orderUtils')
+
 
 
 
@@ -17,7 +19,7 @@ app.use(cors({
     origin: '*'
 }))
 
-app.get('/', (request, response) =>{
+app.get('/', (request, response, next) =>{
     response.send("Hola, mundo")
 })
 
@@ -25,30 +27,37 @@ app.get('/api/orders', (request, response, next) =>{
     Order.find({})
     .then(order =>{
         response.json(order)
-    })
+    }).catch(error => next(error))
 })
 
-app.get('/api/orders/pending', (request, response) =>{
+app.get('/api/orders/:tableID', (request, response, next) => {
+    const tableID = request.params.tableID
+    Order.find({ table: tableID })
+            .then(order => response.json(order))
+            .catch(error => next(error))
+})
+
+app.get('/api/orders/pending', (request, response, next) =>{
     Order.find({state: 'recieved'})
     .then(order => {
         response.json(order)
-    })
+    }).catch(error => next(error))
 })
-app.get('/api/orders/processing', (request, response) =>{
-    Order.find({state:'onCourse'})
+app.get('/api/orders/processing', (request, response, next) =>{
+    Order.find({state:'preparing'})
     .then(order =>{
         response.json(order)
-    })
+    }).catch(error => next(error))
 })
-app.get('/api/orders/served', (request, response) =>{
-    Order.find({state:'finished'})
+app.get('/api/orders/served', (request, response, next) =>{
+    Order.find({state:'served'})
     .then(order => {
         response.json(order)
-    })
+    }).catch(error => next(error))
 })
 app.get('/api/orders/:id', (request, response, next)=>{
-    const id = request.params
-    Order.find({_id:id})
+    const orderID = request.params.id
+    Order.find({ _id:orderID })
     .then(order=>{
         response.json(order)
     })
@@ -59,11 +68,11 @@ app.get('/api/orders/:id', (request, response, next)=>{
 
 /********** MENU ITEMS GET METHODS*************** */
 
-app.get('/api/products', (request, response) =>{
+app.get('/api/products', (request, response, next) =>{
     menuItem.find({})
     .then(item => {
         response.json(item)
-    })
+    }).catch(error => next(error))
 })
 
 app.get('/api/products/categories', (resquest, response, next)=>{
@@ -74,12 +83,12 @@ app.get('/api/products/categories', (resquest, response, next)=>{
         next(error))
 })
 
-app.get('/api/products/:category', (request, response) =>{
+app.get('/api/products/:category', (request, response, next) =>{
     const {category} = request.params
     menuItem.find({category: category})
     .then(products =>{
         response.json(products)
-    })
+    }).catch(error => next(error))
 })
 
 app.get('/api/products/:category/sub', (request, response, next) =>{
@@ -107,13 +116,23 @@ app.get('/api/products/find/:id', (request, response, next) =>{
 /**************POST METHODS**************** */
 
 app.post('/api/orders/save', async (request, response)=>{
-    console.log(request.body)
-    const order = new Order({...request.body, status: 'recieved'})
     try {
+        console.log(request.body)
+        const order = new Order({...request.body,
+                                status: 'recieved', 
+                                totalPrice: await calculateTotalPrice(request.body)
+                                })
+        console.log(order)
+        
         const savedOrder = await order.save()
         response.status(200).send(savedOrder)
         console.log('guardada')
-    } catch (err) {
+
+        //Simulamos que la cocina procesa el pedido
+        setTimeout(() => updateOrderState(order.id, 'preparing'), 50000)
+        setTimeout(() => updateOrderState(order.id, 'served'), 500000)
+    } 
+    catch (err) {
         console.error('Error saving order:', err);
         if (err.name === 'ValidationError') {
             response.status(400).json({message: err.message});
@@ -125,7 +144,7 @@ app.post('/api/orders/save', async (request, response)=>{
 
 /************* MIDDLEWARES **************/
 //Gestion de 404
-app.use((request, response, next) => {
+app.use((error, request, response) => {
         response.status(404)
         .send('<h1>Error 404</h1>' + `La pagina ${request.originalUrl} no existe`)
         .end()    

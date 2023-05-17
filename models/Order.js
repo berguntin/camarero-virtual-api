@@ -8,11 +8,13 @@ const orderScheme = new Schema({
         type: [
             {
                 productId: String,
+                name: String,
                 quantity: Number,
             }
         ],
         validate: [arrayLimit, 'El pedido debe contener al menos un artículo.']
     },
+    totalPrice: Number
 });
 
 function arrayLimit(val) {
