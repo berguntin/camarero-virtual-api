@@ -2,16 +2,18 @@ const {model, Schema} = require('mongoose')
 
 
 const allergensList = [
-    "Lácteos",
-    "Huevos",
-    "Pescado",
-    "Mariscos",
-    "Frutos secos",
-    "Trigo",
+    "Gluten",
+    "Crustáceos",
+    "Huevo",
+    "Cacahuetes",
     "Soja",
+    "Pescado",
+    "Lactosa",
+    "Nueces",
     "Apio",
     "Mostaza",
-    "Sulfitos"
+    "Sésamo",
+    "Moluscos"
   ];
 
 const itemScheme = new Schema({
@@ -45,6 +47,6 @@ itemScheme.set('toJSON', {
     }
 })
 
-const menuItem = model('MenuItem', itemScheme)
+const MenuItem = model('MenuItem', itemScheme)
 
-module.exports = menuItem
+module.exports = MenuItem

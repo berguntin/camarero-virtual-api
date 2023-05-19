@@ -1,9 +1,17 @@
 const {model, Schema} = require('mongoose')
 
 const orderScheme = new Schema({
-    table: String,
+    table: {
+        type: String,
+        ref : 'Table',
+        required: true
+    },
+    token: String,
     date: Date,
-    status: String,
+    status:{
+        type: String,
+        enum: ['received', 'preparing', 'served', 'canceled', 'payed', 'error']
+    },
     items: {
         type: [
             {
