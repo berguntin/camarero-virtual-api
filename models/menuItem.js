@@ -1,6 +1,6 @@
 const {model, Schema} = require('mongoose')
 
-
+//lista de alergenos
 const allergensList = [
     "Gluten",
     "Crustáceos",
