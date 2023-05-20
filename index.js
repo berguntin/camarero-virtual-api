@@ -151,9 +151,16 @@ app.post('/api/token', async (req, res, next) => {
         
 })
 
+
+
 app.post('/api/orders/save', async (request, response)=>{
     try {
         console.log(request.body)
+        //Extraemos el token de la cabecera de la solicitud
+        const token = request.headers['authorization'].split(' ')[1]
+        //Validamos el token facilitado
+        jswtoken.verify(token, process.env.SECRET_KEY)
+        
         const order = new Order({...request.body,
                                 status: 'received', 
                                 totalPrice: await calculateTotalPrice(request.body)
@@ -166,12 +173,20 @@ app.post('/api/orders/save', async (request, response)=>{
         //Simulamos que la cocina procesa el pedido
         setTimeout(() => updateOrderState(order.id, 'preparing'), 50000)
         setTimeout(() => updateOrderState(order.id, 'served'), 500000)
+        
     } 
     catch (err) {
+
         console.error('Error saving order:', err);
+
         if (err.name === 'ValidationError') {
             response.status(400).json({errcode: 400, message: err.message});
-        } else {
+        }
+        //el token ha caducado...
+        else if(err.name === 'TokenExpiredError'){
+            response.status(401).json({errcode: 401, message: 'Expired token'})
+        }
+        else {
             response.status(500).json({errcode: 500, message: 'An unexpected error occurred'});
         }
     }
@@ -191,7 +206,9 @@ app.use((request, response) => {
         .end()    
 })
 
-const PORT = 3002
+
+
+const PORT = 3002 || process.env.PORT
 
 app.listen(PORT, ()=>{
     console.log(`server is running on port: ${PORT}`)

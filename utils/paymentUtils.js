@@ -35,5 +35,10 @@ async function createPaymentOrder(tableID) {
     return savedPayment
 }
 
+/** Funcion de limpieza automatica de pedidos sin pagar**/
+/*
+async function autoPay() {
+    const pendingOrders = await Order.find({ status: ''})
+} */
 
 module.exports = {createPaymentOrder}
