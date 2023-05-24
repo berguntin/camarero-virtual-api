@@ -8,13 +8,12 @@ const Table = require('./models/Table')
 
 const express = require('express')
 const cors = require('cors')
-const { calculateTotalPrice, updateOrderState } = require('./utils/orderUtils')
+const { calculateTotalPrice, updateOrderstatus } = require('./utils/orderUtils')
 const { createPaymentOrder } = require('./utils/paymentUtils')
 
 
 
 const app = express()
-//app.use(cors())
 app.use(express.json())
 app.use(cors({
     origin: '*'
@@ -33,25 +32,27 @@ app.get('/api/orders', (request, response, next) =>{
 
 app.get('/api/orders/:tableID', (request, response, next) => {
     const tableID = request.params.tableID
-    Order.find({ table: tableID })
+    Order.find({ table: tableID,
+                status:{ $nin: ['payed', 'canceled', 'error'] } 
+            })
             .then(order => response.json(order))
             .catch(error => next(error))
 })
 
 app.get('/api/orders/pending', (request, response, next) =>{
-    Order.find({state: 'recieved'})
+    Order.find({status: 'recieved'})
     .then(order => {
         response.json(order)
     }).catch(error => next(error))
 })
 app.get('/api/orders/processing', (request, response, next) =>{
-    Order.find({state:'preparing'})
+    Order.find({status:'preparing'})
     .then(order =>{
         response.json(order)
     }).catch(error => next(error))
 })
 app.get('/api/orders/served', (request, response, next) =>{
-    Order.find({state:'served'})
+    Order.find({status:'served'})
     .then(order => {
         response.json(order)
     }).catch(error => next(error))
@@ -118,7 +119,7 @@ app.get('/api/products/find/:id', (request, response, next) =>{
 /**************POST METHODS**************** */
 
 /** Gestionamos un token tras validar que la mesa existe 
- * Usaremos el token en futuras solicitures
+ * Enviamos una cookie en la respuesta al cliente
  ***/
 app.post('/api/token', async (req, res, next) => {
     const tableID = req.headers.tableid
@@ -141,7 +142,7 @@ app.post('/api/token', async (req, res, next) => {
                                 { tableID },
                                 process.env.SECRET_KEY, 
                                 { expiresIn: '2h'})
-        
+
             res.status(200).json( { tableID, token })
         }
     }
@@ -158,10 +159,13 @@ app.post('/api/orders/save', async (request, response)=>{
         console.log(request.body)
         //Extraemos el token de la cabecera de la solicitud
         const token = request.headers['authorization'].split(' ')[1]
+        const decodedToken = jswtoken.decode(token)
+        
         //Validamos el token facilitado
         jswtoken.verify(token, process.env.SECRET_KEY)
         
         const order = new Order({...request.body,
+                                table: decodedToken.tableID, //Extraemos la id del token para evitar manipulaciones
                                 status: 'received', 
                                 totalPrice: await calculateTotalPrice(request.body)
                                 })
@@ -171,23 +175,25 @@ app.post('/api/orders/save', async (request, response)=>{
         response.status(200).send(savedOrder)
 
         //Simulamos que la cocina procesa el pedido
-        setTimeout(() => updateOrderState(order.id, 'preparing'), 50000)
-        setTimeout(() => updateOrderState(order.id, 'served'), 500000)
+        setTimeout(() => updateOrderstatus(order.id, 'preparing'), 50000) //0,83min
+        setTimeout(() => updateOrderstatus(order.id, 'served'), 300000) //5min
+        //Simulamos el proceso de pago. En el futuro se implementará
+        setTimeout(() => updateOrderstatus(order.id, 'payed'), 500000 )//8,33min
         
     } 
     catch (err) {
 
-        console.error('Error saving order:', err);
+        console.error('Error saving order:', err.name);
 
         if (err.name === 'ValidationError') {
-            response.status(400).json({errcode: 400, message: err.message});
+            response.status(400).json({errcode: 400, message: 'El pedido no es valido'});
         }
         //el token ha caducado...
-        else if(err.name === 'TokenExpiredError'){
-            response.status(401).json({errcode: 401, message: 'Expired token'})
+        else if(err.name === 'TokenExpiredError' || err.name === 'InvalidToken'){
+            response.status(401).json({errcode: 401, message: 'Tu token ha caducado'})
         }
         else {
-            response.status(500).json({errcode: 500, message: 'An unexpected error occurred'});
+            response.status(500).json({errcode: 500, message: 'Error inesperado'});
         }
     }
 })

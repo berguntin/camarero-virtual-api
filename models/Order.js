@@ -6,7 +6,6 @@ const orderScheme = new Schema({
         ref : 'Table',
         required: true
     },
-    token: String,
     date: Date,
     status:{
         type: String,

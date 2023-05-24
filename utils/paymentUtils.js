@@ -41,4 +41,4 @@ async function autoPay() {
     const pendingOrders = await Order.find({ status: ''})
 } */
 
-module.exports = {createPaymentOrder}
+module.exports = { createPaymentOrder }

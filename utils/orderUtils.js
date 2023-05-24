@@ -24,7 +24,7 @@ async function calculateTotalPrice(order) {
 }
 
 //Funcion que simula la interaccion con la cocina del local, actualizando el estado del pedido
-async function updateOrderState(orderID, newStatus){
+async function updateOrderstatus(orderID, newStatus){
 
      const updatedOrder = await Order.findByIdAndUpdate( orderID, 
                                                         {status: newStatus},
@@ -37,5 +37,5 @@ async function updateOrderState(orderID, newStatus){
 
 module.exports = {
                 calculateTotalPrice,
-                updateOrderState
+                updateOrderstatus
             }
