@@ -16,7 +16,7 @@ const { createPaymentOrder } = require('./utils/paymentUtils')
 const app = express()
 app.use(express.json())
 app.use(cors({
-    origin: ['https://camarerodigital.onrender.com/', 'http://localhost:8080']
+    origin: ['https://camarerodigital.onrender.com', 'http://localhost:8080']
 }))
 
 app.get('/', (request, response, next) =>{
