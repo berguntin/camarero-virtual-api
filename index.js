@@ -97,7 +97,6 @@ app.get('/api/products/:category', (request, response, next) =>{
 app.get('/api/products/:category/sub', (request, response, next) =>{
     const {category} = request.params
     console.log(request.params)
-    console.log(category)
     MenuItem.find({category: category}).distinct('subCategory')
     .then(sub =>{
         response.json(sub)
@@ -119,21 +118,16 @@ app.get('/api/products/find/:id', (request, response, next) =>{
 /**************POST METHODS**************** */
 
 /** Gestionamos un token tras validar que la mesa existe 
- * Enviamos una cookie en la respuesta al cliente
+ * Enviamos el token en la respuesta al cliente
  ***/
 app.post('/api/token', async (req, res, next) => {
-    const tableID = req.headers.tableid
-    
+    const tableID = req.headers.tableid    
     if(!tableID){
         return res.status(400).send('Table ID required')
     }
-
     let table
-
     try{
-
         table = await Table.findOne( {tableID: tableID} )
-        console.log(table)
         if(!table){
             res.status(400).send('No existe la mesa indicada: '+tableID).end()
         }
@@ -149,14 +143,12 @@ app.post('/api/token', async (req, res, next) => {
     catch(error) {
         next(error)
     }
-        
 })
 
 
 
 app.post('/api/orders/save', async (request, response)=>{
     try {
-        console.log(request.body)
         //Extraemos el token de la cabecera de la solicitud
         const token = request.headers['authorization'].split(' ')[1]
         const decodedToken = jswtoken.decode(token)
@@ -169,8 +161,7 @@ app.post('/api/orders/save', async (request, response)=>{
                                 status: 'received', 
                                 totalPrice: await calculateTotalPrice(request.body)
                                 })
-        console.log(order)
-        
+    
         const savedOrder = await order.save()
         response.status(200).send(savedOrder)
 
