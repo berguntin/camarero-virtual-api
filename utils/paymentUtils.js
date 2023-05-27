@@ -5,7 +5,12 @@ const MenuItem = require('../models/MenuItem')
 const Payment = require('../models/PayOrder')
 const { calculateTotalPrice, updateOrderState } = require('./orderUtils')
 
-
+/**
+ * Crea una orden de pago para una mesa específica.
+ *
+ * @param {string} tableID - El ID de la mesa.
+ * @returns {Promise<Object>} Una promesa que se resuelve con la orden de pago creada.
+ */
 async function createPaymentOrder(tableID) {
     //recuperamos los pedidos pendientes de pago
     const pendingOrders = await Order.find({   
@@ -35,10 +40,6 @@ async function createPaymentOrder(tableID) {
     return savedPayment
 }
 
-/** Funcion de limpieza automatica de pedidos sin pagar**/
-/*
-async function autoPay() {
-    const pendingOrders = await Order.find({ status: ''})
-} */
+
 
 module.exports = { createPaymentOrder }

@@ -11,7 +11,7 @@ const cors = require('cors')
 const { calculateTotalPrice, updateOrderstatus } = require('./utils/orderUtils')
 const { createPaymentOrder } = require('./utils/paymentUtils')
 
-
+const path = require('path');
 
 const app = express()
 app.use(express.json())
@@ -19,10 +19,19 @@ app.use(cors({
     origin: ['https://camarerodigital.onrender.com', 'http://localhost:8080']
 }))
 
-app.get('/', (request, response, next) =>{
-    response.send("Hola, mundo")
-})
+const docsPath = path.join(__dirname, '/out');
+app.use(express.static(docsPath));
 
+/**
+ * Recupera todos los pedidos.
+ *
+ * @route GET /api/orders
+ * @param {Object} request - La solicitud HTTP.
+ * @param {Object} response - La respuesta HTTP.
+ * @param {Function} next - La siguiente función de middleware.
+ * @returns {Array} Un array de objetos JSON que representan los pedidos.
+ * @throws {Error} Si ocurre algún error durante la búsqueda de los pedidos.
+ */
 app.get('/api/orders', (request, response, next) =>{
     Order.find({})
     .then(order =>{
@@ -30,6 +39,16 @@ app.get('/api/orders', (request, response, next) =>{
     }).catch(error => next(error))
 })
 
+/**
+ * Recupera los pedidos de una mesa específica.
+ *
+ * @route GET /api/orders/:tableID
+ * @param {Object} request - La solicitud HTTP.
+ * @param {Object} response - La respuesta HTTP.
+ * @param {Function} next - La siguiente función de middleware.
+ * @returns {Array} Un array de objetos JSON que representan los pedidos de la mesa especificada.
+ * @throws {Error} Si ocurre algún error durante la búsqueda de los pedidos.
+ */
 app.get('/api/orders/:tableID', (request, response, next) => {
     const tableID = request.params.tableID
     Order.find({ table: tableID,
@@ -38,28 +57,67 @@ app.get('/api/orders/:tableID', (request, response, next) => {
             .then(order => response.json(order))
             .catch(error => next(error))
 })
-
+/**
+ * Recupera los pedidos pendientes.
+ *
+ * @route GET /api/orders/pending
+ * @param {Object} request - La solicitud HTTP.
+ * @param {Object} response - La respuesta HTTP.
+ * @param {Function} next - La siguiente función de middleware.
+ * @returns {Array} Un array de objetos JSON que representan los pedidos pendientes.
+ * @throws {Error} Si ocurre algún error durante la búsqueda de los pedidos.
+ */
 app.get('/api/orders/pending', (request, response, next) =>{
     Order.find({status: 'recieved'})
     .then(order => {
         response.json(order)
     }).catch(error => next(error))
 })
+/**
+ * Recupera los pedidos en proceso.
+ *
+ * @route GET /api/orders/processing
+ * @param {Object} request - La solicitud HTTP.
+ * @param {Object} response - La respuesta HTTP.
+ * @param {Function} next - La siguiente función de middleware.
+ * @returns {Array} Un array de objetos JSON que representan los pedidos en proceso.
+ * @throws {Error} Si ocurre algún error durante la búsqueda de los pedidos.
+ */
 app.get('/api/orders/processing', (request, response, next) =>{
     Order.find({status:'preparing'})
     .then(order =>{
         response.json(order)
     }).catch(error => next(error))
 })
+/**
+ * Recupera los pedidos servidos.
+ *
+ * @route GET /api/orders/served
+ * @param {Object} request - La solicitud HTTP.
+ * @param {Object} response - La respuesta HTTP.
+ * @param {Function} next - La siguiente función de middleware.
+ * @returns {Array} Un array de objetos JSON que representan los pedidos servidos.
+ * @throws {Error} Si ocurre algún error durante la búsqueda de los pedidos.
+ */
 app.get('/api/orders/served', (request, response, next) =>{
     Order.find({status:'served'})
     .then(order => {
         response.json(order)
     }).catch(error => next(error))
 })
+/**
+ * Recupera un pedido por su ID.
+ *
+ * @route GET /api/orders/:id
+ * @param {Object} request - La solicitud HTTP.
+ * @param {Object} response - La respuesta HTTP.
+ * @param {Function} next - La siguiente función de middleware.
+ * @returns {Array} Un array de objetos JSON que representan la pedido encontrado.
+ * @throws {Error} Si ocurre algún error durante la búsqueda del pedido.
+ */
 app.get('/api/orders/:id', (request, response, next)=>{
     const orderID = request.params.id
-    Order.find({ _id:orderID })
+    Order.findOne({ _id:orderID })
     .then(order=>{
         response.json(order)
     })
@@ -69,8 +127,14 @@ app.get('/api/orders/:id', (request, response, next)=>{
 })
 
 
-/********** MENU ITEMS GET METHODS*************** */
-
+/***** MENU ITEMS GET METHODS*************** */
+/**
+ * Recupera todos los productos.
+ *
+ * @route GET /api/products
+ * @returns {Array} Un array de objetos JSON que representan los productos.
+ * @throws {Error} Si ocurre algún error durante la búsqueda de los productos.
+ */
 app.get('/api/products', (request, response, next) =>{
     MenuItem.find({})
     .then(item => {
@@ -78,6 +142,13 @@ app.get('/api/products', (request, response, next) =>{
     }).catch(error => next(error))
 })
 
+/**
+ * Recupera las categorías de productos disponibles.
+ *
+ * @route GET /api/products/categories
+ * @returns {Array} Un array de strings que representan las categorías de productos.
+ * @throws {Error} Si ocurre algún error durante la búsqueda de las categorías.
+ */
 app.get('/api/products/categories', (resquest, response, next)=>{
     MenuItem.distinct('category')
     .then(categorie =>{
@@ -86,6 +157,14 @@ app.get('/api/products/categories', (resquest, response, next)=>{
         next(error))
 })
 
+/**
+ * Recupera los productos de una categoría específica.
+ *
+ * @route GET /api/products/:category
+ * @param {string} category - La categoría de productos para filtrar.
+ * @returns {Array} Un array de objetos JSON que representan los productos de la categoría especificada.
+ * @throws {Error} Si ocurre algún error durante la búsqueda de los productos.
+ */
 app.get('/api/products/:category', (request, response, next) =>{
     const {category} = request.params
     MenuItem.find({category: category})
@@ -94,6 +173,14 @@ app.get('/api/products/:category', (request, response, next) =>{
     }).catch(error => next(error))
 })
 
+/**
+ * Recupera las subcategorías de una categoría específica.
+ *
+ * @route GET /api/products/:category/sub
+ * @param {string} category - La categoría de productos para filtrar.
+ * @returns {Array} Un array de strings que representan las subcategorías de la categoría especificada.
+ * @throws {Error} Si ocurre algún error durante la búsqueda de las subcategorías.
+ */
 app.get('/api/products/:category/sub', (request, response, next) =>{
     const {category} = request.params
     console.log(request.params)
@@ -103,6 +190,14 @@ app.get('/api/products/:category/sub', (request, response, next) =>{
     }).catch(error =>{
         next(error)})
 })
+/**
+ * Recupera un producto por su ID.
+ *
+ * @route GET /api/products/find/:id
+ * @param {string} id - El ID del producto a buscar.
+ * @returns {Object} Un objeto JSON que representa el producto encontrado.
+ * @throws {Error} Si ocurre algún error durante la búsqueda del producto.
+ */
 app.get('/api/products/find/:id', (request, response, next) =>{
     const { id } = request.params
     console.log(request.params)
@@ -115,11 +210,18 @@ app.get('/api/products/find/:id', (request, response, next) =>{
 })
 
 
-/**************POST METHODS**************** */
+/********POST METHODS**************** */
 
-/** Gestionamos un token tras validar que la mesa existe 
- * Enviamos el token en la respuesta al cliente
- ***/
+/**
+ * Genera un token de autenticación para una mesa específica.
+ *
+ * @route POST /api/token
+ * @param {Object} req - La solicitud HTTP.
+ * @param {Object} res - La respuesta HTTP.
+ * @param {Function} next - La siguiente función de middleware.
+ * @returns {Object} Un objeto JSON que contiene el ID de la mesa y el token generado.
+ * @throws {Error} Si ocurre algún error durante la generación del token.
+ */
 app.post('/api/token', async (req, res, next) => {
     const tableID = req.headers.tableid    
     if(!tableID){
@@ -146,7 +248,16 @@ app.post('/api/token', async (req, res, next) => {
 })
 
 
-
+/**
+ * 
+ * Guarda un pedido
+ *
+ * @route POST /api/orders/save
+ * @param {Object} request - La solicitud HTTP.
+ * @param {Object} response - La respuesta HTTP.
+ * @returns {Object} Un objeto JSON que representa el pedido guardado.
+ * @throws {Error} Si ocurre algún error durante el proceso de guardar el pedido.
+ */
 app.post('/api/orders/save', async (request, response)=>{
     try {
         //Extraemos el token de la cabecera de la solicitud
@@ -157,7 +268,7 @@ app.post('/api/orders/save', async (request, response)=>{
         jswtoken.verify(token, process.env.SECRET_KEY)
         
         const order = new Order({...request.body,
-                                table: decodedToken.tableID, //Extraemos la id del token para evitar manipulaciones
+                                table: decodedToken.tableID, //Extraemos la id de mesa del token para evitar manipulaciones
                                 status: 'received', 
                                 totalPrice: await calculateTotalPrice(request.body)
                                 })
@@ -188,15 +299,21 @@ app.post('/api/orders/save', async (request, response)=>{
         }
     }
 })
-/********** PENDIENTE DE DESARROLLAR ************************/
+/*** PENDIENTE DE DESARROLLAR ************************/
 /* app.post('/api/orders/pay/:tableID', (request, response) => {
     const { tableID } = request.params
     response.json(createPaymentOrder(tableID))
 })
 */
 
-/************* MIDDLEWARES **************/
-//Gestion de 404
+/****** MIDDLEWARES **************/
+/*
+ * Middleware para manejar las rutas no encontradas (Error 404).
+ *
+ * @param {Object} request - La solicitud HTTP.
+ * @param {Object} response - La respuesta HTTP.
+ * @returns {void}
+ */
 app.use((request, response) => {
         response.status(404)
         .send('<h1>Error 404</h1>' + `La pagina ${request.originalUrl} no existe`)
