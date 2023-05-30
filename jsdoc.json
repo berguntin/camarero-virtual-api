@@ -1,6 +1,6 @@
 {
     "source": {
-      "include": ["./index.js"],
+      "include": ["app", "utils"],
       "exclude": ["node_modules"]
     },
     "plugins": [],

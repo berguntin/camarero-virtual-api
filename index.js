@@ -10,17 +10,19 @@ const express = require('express')
 const cors = require('cors')
 const { calculateTotalPrice, updateOrderstatus } = require('./utils/orderUtils')
 const { createPaymentOrder } = require('./utils/paymentUtils')
-
+const { permittedLocation } = require('./locationConfig')
 const path = require('path');
+
 
 const app = express()
 app.use(express.json())
 app.use(cors({
-    origin: ['https://camarerodigital.onrender.com', 'http://localhost:8080']
+    origin: ['https://camarerodigital.vercel.app','https://camarerodigital.onrender.com', 'http://localhost:8080']
 }))
 
-const docsPath = path.join(__dirname, '/out');
-app.use(express.static(docsPath));
+app.get('/', (resquest, response, next) => {
+    response.send('Bienvenido a mi api NODEJS')
+})
 
 /**
  * Recupera todos los pedidos.
@@ -223,9 +225,18 @@ app.get('/api/products/find/:id', (request, response, next) =>{
  * @throws {Error} Si ocurre algún error durante la generación del token.
  */
 app.post('/api/token', async (req, res, next) => {
-    const tableID = req.headers.tableid    
+    const tableID = req.headers.tableid
+    const {lat, long} = req.body
+    console.log(lat, long)
+    const verifyLocation = () => {
+        return lat === permittedLocation.lat && long === permittedLocation.long
+    }
+    
     if(!tableID){
-        return res.status(400).send('Table ID required')
+        return res.status(400).send('Es necesario indicar ID de la mesa')
+    }
+    if(!verifyLocation){
+        return res.status(400).send('Loalización no permitida')
     }
     let table
     try{
