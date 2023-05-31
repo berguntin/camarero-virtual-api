@@ -10,7 +10,7 @@ const express = require('express')
 const cors = require('cors')
 const { calculateTotalPrice, updateOrderstatus } = require('./utils/orderUtils')
 const { createPaymentOrder } = require('./utils/paymentUtils')
-const { permittedLocation } = require('./locationConfig')
+const  permittedLocation = require('./locationConfig')
 const path = require('path');
 
 
@@ -226,8 +226,9 @@ app.get('/api/products/find/:id', (request, response, next) =>{
  */
 app.post('/api/token', async (req, res, next) => {
     const tableID = req.headers.tableid
-    const {lat, long} = req.body
-    console.log(lat, long)
+    const location = req.headers.location
+    const {lat, long} = JSON.parse(location)
+
     const verifyLocation = () => {
         return lat === permittedLocation.lat && long === permittedLocation.long
     }
@@ -235,7 +236,7 @@ app.post('/api/token', async (req, res, next) => {
     if(!tableID){
         return res.status(400).send('Es necesario indicar ID de la mesa')
     }
-    if(!verifyLocation){
+    if(!verifyLocation()){
         return res.status(400).send('Loalización no permitida')
     }
     let table
