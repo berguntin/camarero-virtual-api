@@ -10,7 +10,7 @@ const express = require('express')
 const cors = require('cors')
 const { calculateTotalPrice, updateOrderstatus } = require('./utils/orderUtils')
 const { createPaymentOrder } = require('./utils/paymentUtils')
-const  permittedLocation = require('./locationConfig')
+const { checkCoordinatesInRange } = require('./utils/locationUtils')
 const path = require('path');
 
 
@@ -228,16 +228,14 @@ app.post('/api/token', async (req, res, next) => {
     const tableID = req.headers.tableid
     const location = req.headers.location
     const {lat, long} = JSON.parse(location)
+    //Comprobamos que el cliente este dentro del rango permitido de localizaciones
+    const verifyLocation = checkCoordinatesInRange(lat, long)
 
-    const verifyLocation = () => {
-        return lat === permittedLocation.lat && long === permittedLocation.long
-    }
-    
     if(!tableID){
         return res.status(400).send('Es necesario indicar ID de la mesa')
     }
-    if(!verifyLocation()){
-        return res.status(400).send('Loalización no permitida')
+    if(!verifyLocation){
+        return res.status(400).send('Localización no permitida')
     }
     let table
     try{
