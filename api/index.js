@@ -242,7 +242,7 @@ app.post('/api/token', async (req, res, next) => {
     try{
         table = await Table.findOne( {tableID: tableID} )
         if(!table){
-            res.status(403).send('No existe la mesa indicada: '+tableID).end()
+            res.status(403).send({ error: 'No existe la mesa indicada: '+tableID } ).end()
         }
         else{
             const token = jswtoken.sign(
