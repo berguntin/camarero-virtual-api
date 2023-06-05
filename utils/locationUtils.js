@@ -1,6 +1,6 @@
 // Coordenadas del restaurante
-const initialLat = 39.5493536
-const initialLon = -0.3860884
+const initialLat = 39.6043153
+const initialLon = -0.5578605
 //Definimos el rango permitido
 const rangeDistance = process.env.RANGE_DISTANCE;
 

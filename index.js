@@ -227,21 +227,22 @@ app.get('/api/products/find/:id', (request, response, next) =>{
 app.post('/api/token', async (req, res, next) => {
     const tableID = req.headers.tableid
     const location = req.headers.location
+    const useLocation = req.headers.useLocation
     const {lat, long} = JSON.parse(location)
     //Comprobamos que el cliente este dentro del rango permitido de localizaciones
     const verifyLocation = checkCoordinatesInRange(lat, long)
 
     if(!tableID){
-        return res.status(400).send('Es necesario indicar ID de la mesa')
+        return res.status(403).send({error: 'Es necesario indicar ID de la mesa' })
     }
-    if(!verifyLocation){
-        return res.status(400).send('Localización no permitida')
+    if(useLocation && !verifyLocation){
+        return res.status(403).send({error:'No estás en el restaurante'})
     }
     let table
     try{
         table = await Table.findOne( {tableID: tableID} )
         if(!table){
-            res.status(400).send('No existe la mesa indicada: '+tableID).end()
+            res.status(403).send('No existe la mesa indicada: '+tableID).end()
         }
         else{
             const token = jswtoken.sign(
