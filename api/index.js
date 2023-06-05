@@ -1,16 +1,16 @@
-require('./mongo')
+require('../mongo')
 require('dotenv').config()
 
 const jswtoken = require('jsonwebtoken')
-const Order = require('./models/Order')
-const MenuItem = require('./models/MenuItem') 
-const Table = require('./models/Table')
+const Order = require('../models/Order')
+const MenuItem = require('../models/MenuItem') 
+const Table = require('../models/Table')
 
 const express = require('express')
 const cors = require('cors')
-const { calculateTotalPrice, updateOrderstatus } = require('./utils/orderUtils')
-const { createPaymentOrder } = require('./utils/paymentUtils')
-const { checkCoordinatesInRange } = require('./utils/locationUtils')
+const { calculateTotalPrice, updateOrderstatus } = require('../utils/orderUtils')
+const { createPaymentOrder } = require('../utils/paymentUtils')
+const { checkCoordinatesInRange } = require('../utils/locationUtils')
 const path = require('path');
 
 
@@ -318,7 +318,7 @@ app.post('/api/orders/save', async (request, response)=>{
 */
 
 /****** MIDDLEWARES **************/
-/*
+/**
  * Middleware para manejar las rutas no encontradas (Error 404).
  *
  * @param {Object} request - La solicitud HTTP.
